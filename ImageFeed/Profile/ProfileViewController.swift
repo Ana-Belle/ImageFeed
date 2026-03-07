@@ -23,9 +23,9 @@ final class ProfileViewController: UIViewController {
     }
     
     private func setupAvatarImageView() {
-        let profileImage = UIImage(named: "avatar")
+        let profileImage = UIImage(resource: .avatar)
         avatarImageView = UIImageView(image: profileImage)
-        guard let avatarImageView = avatarImageView else { return }
+        guard let avatarImageView else { return }
         avatarImageView.tintColor = .ypGrayIOS
         avatarImageView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(avatarImageView)
@@ -40,14 +40,15 @@ final class ProfileViewController: UIViewController {
     
     private func setupNameLabel() {
         nameLabel = UILabel()
-        guard let nameLabel = nameLabel else { return }
-        nameLabel.text = "Екатерина Новикова"
+        guard let nameLabel else { return }
+        let name: String = "Екатерина Новикова"
+        nameLabel.text = name
         nameLabel.textColor = .ypWhiteIOS
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
         nameLabel.font = UIFont.boldSystemFont(ofSize: 23)
         view.addSubview(nameLabel)
         
-        guard let avatarImageView = avatarImageView else { return }
+        guard let avatarImageView else { return }
         
         NSLayoutConstraint.activate([
             nameLabel.leadingAnchor.constraint(equalTo: avatarImageView.leadingAnchor),
@@ -59,14 +60,15 @@ final class ProfileViewController: UIViewController {
     
     private func setupLoginNameLabel() {
         loginNameLabel = UILabel()
-        guard let loginNameLabel = loginNameLabel else { return }
-        loginNameLabel.text = "@ekaterina_nov"
+        guard let loginNameLabel else { return }
+        let loginName: String = "@ekaterina_nov"
+        loginNameLabel.text = loginName
         loginNameLabel.textColor = .ypWhiteIOS
         loginNameLabel.font = UIFont.systemFont(ofSize: 13)
         loginNameLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(loginNameLabel)
         
-        guard let nameLabel = nameLabel else { return }
+        guard let nameLabel else { return }
         
         NSLayoutConstraint.activate([
             loginNameLabel.leadingAnchor.constraint(equalTo: nameLabel.leadingAnchor),
@@ -78,13 +80,14 @@ final class ProfileViewController: UIViewController {
     
     private func setupDescriptionLabel() {
         let descriptionLabel = UILabel()
-        descriptionLabel.text = "Hello, world!"
+        let description: String = "Hello, world!"
+        descriptionLabel.text = description
         descriptionLabel.textColor = .ypWhiteIOS
         descriptionLabel.font = UIFont.systemFont(ofSize: 13)
         descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(descriptionLabel)
         
-        guard let loginNameLabel = loginNameLabel else { return }
+        guard let loginNameLabel else { return }
         
         NSLayoutConstraint.activate([
             descriptionLabel.leadingAnchor.constraint(equalTo: loginNameLabel.leadingAnchor),
@@ -104,7 +107,7 @@ final class ProfileViewController: UIViewController {
         exitButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(exitButton)
         
-        guard let avatarImageView = avatarImageView else { return }
+        guard let avatarImageView else { return }
         
         NSLayoutConstraint.activate([
             exitButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),

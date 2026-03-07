@@ -6,8 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		8EC061212F506E250024B465 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8EC061202F506E250024B465 /* WebKit.framework */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
-		8E04351C2F2B902500E152F4 /* ImageFeed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ImageFeed.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8EAEDC8B2F55B02C003798FD /* ImageFeed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ImageFeed.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8EC061202F506E250024B465 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -36,6 +41,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8EC061212F506E250024B465 /* WebKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -46,16 +52,17 @@
 			isa = PBXGroup;
 			children = (
 				8E04351E2F2B902500E152F4 /* ImageFeed */,
-				8E04351D2F2B902500E152F4 /* Products */,
+				8EC0611F2F506E250024B465 /* Frameworks */,
+				8EAEDC8B2F55B02C003798FD /* ImageFeed.app */,
 			);
 			sourceTree = "<group>";
 		};
-		8E04351D2F2B902500E152F4 /* Products */ = {
+		8EC0611F2F506E250024B465 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				8E04351C2F2B902500E152F4 /* ImageFeed.app */,
+				8EC061202F506E250024B465 /* WebKit.framework */,
 			);
-			name = Products;
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -80,7 +87,7 @@
 			packageProductDependencies = (
 			);
 			productName = ImageFeed;
-			productReference = 8E04351C2F2B902500E152F4 /* ImageFeed.app */;
+			productReference = 8EAEDC8B2F55B02C003798FD /* ImageFeed.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -108,7 +115,7 @@
 			mainGroup = 8E0435132F2B902500E152F4;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 8E04351D2F2B902500E152F4 /* Products */;
+			productRefGroup = 8E0435132F2B902500E152F4;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
