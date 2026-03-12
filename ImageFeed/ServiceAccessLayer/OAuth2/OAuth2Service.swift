@@ -13,7 +13,7 @@ final class OAuth2Service {
     private let decoder = JSONDecoder()
 
     struct OAuthTokenResponseBody: Decodable {
-        let accessToken: String
+        let access_token: String
     }
     
     private init() { }
@@ -38,8 +38,8 @@ final class OAuth2Service {
                 let decoder = JSONDecoder()
                 do {
                     let response = try decoder.decode(OAuthTokenResponseBody.self, from: data)
-                    self.tokenStorage.token = response.accessToken
-                    completion(.success(response.accessToken))
+                    self.tokenStorage.token = response.access_token
+                    completion(.success(response.access_token))
                 } catch {
                     print("Ошибка при декодировании данных: \(error)")
                     completion(.failure(error))
