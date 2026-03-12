@@ -99,7 +99,7 @@ final class ProfileViewController: UIViewController {
     
     private func setupExitButton() {
         let exitButton = UIButton.systemButton(
-            with: UIImage(named: "exit_button")!,
+            with: UIImage(resource: .exitButton),
             target: self,
             action: nil
         )
