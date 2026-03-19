@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import ProgressHUD
 
 protocol AuthViewControllerDelegate: AnyObject {
     func didAuthenticate(_ vc: AuthViewController)
@@ -15,15 +14,15 @@ protocol AuthViewControllerDelegate: AnyObject {
 final class AuthViewController: UIViewController {
     private let showWebViewSegueIdentifier = "ShowWebView"
     private let oauth2Service = OAuth2Service.shared
-    
+
     weak var delegate: AuthViewControllerDelegate?
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         configureBackButton()
     }
-    
+
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == showWebViewSegueIdentifier {
             guard
@@ -37,7 +36,7 @@ final class AuthViewController: UIViewController {
             super.prepare(for: segue, sender: sender)
         }
     }
-    
+
     private func configureBackButton() {
         navigationController?.navigationBar.backIndicatorImage = UIImage(resource: .navBackButtonBlack)
         navigationController?.navigationBar.backIndicatorTransitionMaskImage = UIImage(resource: .navBackButtonBlack)
@@ -50,10 +49,10 @@ extension AuthViewController: WebViewViewControllerDelegate {
     func webViewViewController(_ vc: WebViewViewController, didAuthenticateWithCode code: String) {
         vc.dismiss(animated: true)
 
-        ProgressHUD.animate()
+        UIBlockingProgressHUD.show()
 
         oauth2Service.fetchOAuthToken(code) { result in
-            ProgressHUD.dismiss()
+            UIBlockingProgressHUD.dismiss()
 
             switch result {
             case .success:
@@ -64,7 +63,7 @@ extension AuthViewController: WebViewViewControllerDelegate {
             }
         }
     }
-    
+
     func webViewViewControllerDidCancel(_ vc: WebViewViewController) {
         vc.dismiss(animated: true)
     }
