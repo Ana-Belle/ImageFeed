@@ -5,27 +5,25 @@
 //  Created by Anastasia Belyakova on 05.03.2026.
 //
 import Foundation
+import SwiftKeychainWrapper
 
 final class OAuth2TokenStorage {
-    
     static let shared = OAuth2TokenStorage()
-    private let storage: UserDefaults = .standard
-    
     private init() { }
-    
+
     private enum Keys: String {
         case token
     }
-    
+
     var token: String? {
         get {
-            storage.string(forKey: Keys.token.rawValue)
+            return KeychainWrapper.standard.string(forKey: Keys.token.rawValue)
         }
         set {
-            if let newValue {
-                storage.set(newValue, forKey: Keys.token.rawValue)
+            if let token = newValue {
+                KeychainWrapper.standard.set(token, forKey: Keys.token.rawValue)
             } else {
-                storage.removeObject(forKey: Keys.token.rawValue)
+                KeychainWrapper.standard.removeObject(forKey: Keys.token.rawValue)
             }
         }
     }

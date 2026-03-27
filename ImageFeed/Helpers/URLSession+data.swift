@@ -50,7 +50,7 @@ extension URLSession {
         completion: @escaping (Result<T, Error>) -> Void
     ) -> URLSessionTask {
         let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase // Явно устанавливаем стратегию
+        //decoder.keyDecodingStrategy = .convertFromSnakeCase // Явно устанавливаем стратегию
 
         let task = data(for: request) { (result: Result<Data, Error>) in
             switch result {

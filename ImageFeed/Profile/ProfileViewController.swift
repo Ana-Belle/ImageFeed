@@ -18,6 +18,12 @@ final class ProfileViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        setupAvatarImageView()
+        setupNameLabel()
+        setupLoginNameLabel()
+        setupDescriptionLabel()
+        setupExitButton()
+
         if let profile = ProfileService.shared.profile {
             updateProfileDetails(profile: profile)
         }
@@ -32,12 +38,6 @@ final class ProfileViewController: UIViewController {
                 self.updateAvatar()
             }
         updateAvatar()
-
-        setupAvatarImageView()
-        setupNameLabel()
-        setupLoginNameLabel()
-        setupDescriptionLabel()
-        setupExitButton()
     }
 
     private func updateAvatar() {
