@@ -26,10 +26,6 @@ final class OAuth2Service {
     private var task: URLSessionTask?
     private var lastCode: String?
     
-    /*struct OAuthTokenResponseBody: Decodable {
-     let access_token: String
-     }*/
-    
     struct OAuthTokenResponseBody: Codable {
         let accessToken: String
         
