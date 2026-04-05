@@ -18,7 +18,7 @@ final class ProfileViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        SetupUI()
+        setupUI()
         
         if let profile = ProfileService.shared.profile {
             updateProfileDetails(profile: profile)
@@ -36,7 +36,7 @@ final class ProfileViewController: UIViewController {
         updateAvatar()
     }
     
-    private func SetupUI() {
+    private func setupUI() {
         view.backgroundColor = .ypBlackIOS
         setupAvatarImageView()
         setupNameLabel()

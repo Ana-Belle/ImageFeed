@@ -39,8 +39,8 @@ final class SplashViewController: UIViewController {
     }
     
     private func setupImageView() {
-        let imageSplashScreenLogo = UIImage(named: "splash_screen_logo")
-        
+        let imageSplashScreenLogo = UIImage(resource: .splashScreenLogo)
+
         imageView = UIImageView(image: imageSplashScreenLogo)
         
         imageView.translatesAutoresizingMaskIntoConstraints = false
