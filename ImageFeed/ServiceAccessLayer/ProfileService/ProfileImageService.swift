@@ -4,6 +4,7 @@
 //
 //  Created by Anastasia Belyakova on 20.03.2026.
 //
+
 import Foundation
 
 struct ProfileImage: Codable {
@@ -66,7 +67,7 @@ final class ProfileImageService {
     }
     
     private func makeProfileImageRequest(username: String, token: String) -> URLRequest? {
-        guard let url = URL(string: "https://api.unsplash.com/users/\(username)") else {
+        guard let url = URL(string: Constants.defaultBaseURLString + "/users/\(username)") else {
             return nil
         }
         
