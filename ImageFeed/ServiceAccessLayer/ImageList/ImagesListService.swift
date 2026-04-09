@@ -6,90 +6,140 @@
 //
 import Foundation
 
+enum ImagesListServiceError: Error {
+    case corruptedData
+}
+
+struct PhotoResult: Decodable {
+    let id: String
+    let width: CGFloat
+    let height: CGFloat
+    let createdAt: String?
+    let description: String?
+    let altDescription: String?
+    let urls: PhotoResultUrls
+    let likedByUser: Bool
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case width
+        case height
+        case createdAt = "created_at"
+        case description
+        case altDescription = "alt_description"
+        case urls
+        case likedByUser = "liked_by_user"
+    }
+}
+
+struct PhotoResultUrls: Decodable {
+    let thumb: String
+    let small: String
+    let regular: String
+    let full: String
+}
+
 struct Photo {
     let id: String
     let size: CGSize
     let createdAt: Date?
     let welcomeDescription: String?
     let thumbImageURL: String
+    let smallImageURL: String
+    let regularImageURL: String
     let largeImageURL: String
-    let isLiked: Bool
+    var isLiked: Bool
 }
 
-struct PhotoResult: Decodable {
-    let id: String
-    let urls: UrlsResult
+extension PhotoResult {
+    
+    func getPhoto() -> Photo {
+        var date: Date?
+        if let createdAt {
+            let dateFormatter = ISO8601DateFormatter()
+            date = dateFormatter.date(from: createdAt)
+        } else {
+            date = nil
+        }
+        
+        return Photo(
+            id: id,
+            size: CGSize(width: width, height: height),
+            createdAt: date,
+            welcomeDescription: description ?? altDescription,
+            thumbImageURL: urls.thumb,
+            smallImageURL: urls.small,
+            regularImageURL: urls.regular,
+            largeImageURL: urls.full,
+            isLiked: likedByUser
+        )
+    }
 }
 
-struct UrlsResult: Decodable {
-    let raw: String
-    let full: String
-    let regular: String
-    let small: String
-    let thumb: String
-}
-
-final class ImagesListService {
-    static let shared = ImagesListService()
-    private init() {}
-
-    private(set) var photos: [Photo] = []
+class ImagesListService {
+    private let tokenStorage = OAuth2TokenStorage.shared
+    private let decoder = JSONDecoder()
+    
+    private var pageNumber: Int = 1
     private var task: URLSessionTask?
-    private var lastLoadedPage: Int?
+    
+    var photos: [Photo] = []
     static let didChangeNotification = Notification.Name(rawValue: "ImagesListServiceDidChange")
-
-    func fetchPhotosNextPage() {
-        assert(Thread.isMainThread)
-
-        task?.cancel()
-
-        let nextPage = (lastLoadedPage ?? 0) + 1
-
-        guard let token = OAuth2TokenStorage.shared.token else { return }
-        guard let request = makeImageListRequest(nextPage: nextPage, token: token) else { return }
-
-        let task = URLSession.shared.objectTask(for: request) { [weak self] (result: Result<PhotoResult, Error>) in
-            switch result {
-            case .success(let result):
-                guard let self = self else { return }
-                self.lastLoadedPage = nextPage
-
-                NotificationCenter.default
-                    .post(
+    
+    func fetchPhotosNextPage(completion: @escaping (Error?) -> Void) {
+        guard task == nil, let request = request() else { return }
+        
+        task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            guard let self else { return }
+            
+            let complentionOnMainQueue: (Error?) -> Void = { error in
+                DispatchQueue.main.async {
+                    completion(error)
+                }
+            }
+            
+            task = nil
+            if let error {
+                DispatchQueue.main.async {
+                    complentionOnMainQueue(error)
+                }
+            }
+            
+            if let data {
+                do {
+                    let photoResults = try decoder.decode([PhotoResult].self, from: data)
+                    for photoResult in photoResults {
+                        //guard let url = URL(string: photoResult.urls.regular) else { continue }
+                        photos.append(photoResult.getPhoto())
+                    }
+                    
+                    NotificationCenter.default.post(
                         name: ImagesListService.didChangeNotification,
-                        object: self
+                        object: self,
+                        userInfo: ["photos": self.photos]
                     )
-
-            case .failure(let error):
-                print("[fetchPhotosNextPage]: Ошибка запроса: \(error.localizedDescription)")
+                    
+                    pageNumber += 1
+                    
+                    complentionOnMainQueue(nil)
+                } catch {
+                    complentionOnMainQueue(error)
+                }
+            } else {
+                complentionOnMainQueue(ImagesListServiceError.corruptedData)
             }
         }
-
-        self.task = task
-        task.resume()
+        task?.resume()
     }
-
-    private func makeImageListRequest(nextPage: Int, token: String) -> URLRequest? {
-        guard var urlComponents = URLComponents(string: Constants.defaultBaseURLString + "/photos") else {
-            assertionFailure("Ошибка при создании URL")
-            return nil
-        }
-
-        urlComponents.queryItems = [
-            URLQueryItem(name: "page", value: "\(nextPage)"),
-            URLQueryItem(name: "per_page", value: "10")
-        ]
-
-        guard let url = urlComponents.url else {
-            return nil
-        }
-
+    
+    private func request() -> URLRequest? {
+        var urlComponents = URLComponents(string: Constants.defaultBaseURLString + "/photos")
+        urlComponents?.queryItems = [URLQueryItem(name: "page", value: String(pageNumber))]
+        
+        guard let url = urlComponents?.url, let token = tokenStorage.token else { return nil }
+        
         var request = URLRequest(url: url)
-        request.httpMethod = HTTPMethod.post.rawValue
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         return request
     }
-
 }
-
-
