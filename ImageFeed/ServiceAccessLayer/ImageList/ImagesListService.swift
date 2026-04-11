@@ -12,23 +12,21 @@ enum ImagesListServiceError: Error {
 
 struct PhotoResult: Decodable {
     let id: String
+    let createdAt: String?
     let width: CGFloat
     let height: CGFloat
-    let createdAt: String?
-    let description: String?
-    let altDescription: String?
-    let urls: PhotoResultUrls
     let likedByUser: Bool
+    let description: String?
+    let urls: PhotoResultUrls
     
     enum CodingKeys: String, CodingKey {
         case id
+        case createdAt = "created_at"
         case width
         case height
-        case createdAt = "created_at"
-        case description
-        case altDescription = "alt_description"
-        case urls
         case likedByUser = "liked_by_user"
+        case description
+        case urls
     }
 }
 
@@ -45,8 +43,6 @@ struct Photo {
     let createdAt: Date?
     let welcomeDescription: String?
     let thumbImageURL: String
-    let smallImageURL: String
-    let regularImageURL: String
     let largeImageURL: String
     var isLiked: Bool
 }
@@ -66,10 +62,8 @@ extension PhotoResult {
             id: id,
             size: CGSize(width: width, height: height),
             createdAt: date,
-            welcomeDescription: description ?? altDescription,
+            welcomeDescription: description,
             thumbImageURL: urls.thumb,
-            smallImageURL: urls.small,
-            regularImageURL: urls.regular,
             largeImageURL: urls.full,
             isLiked: likedByUser
         )
@@ -87,7 +81,7 @@ class ImagesListService {
     static let didChangeNotification = Notification.Name(rawValue: "ImagesListServiceDidChange")
     
     func fetchPhotosNextPage(completion: @escaping (Error?) -> Void) {
-        guard task == nil, let request = request() else { return }
+        guard task == nil, let request = makeFetchPhotosNextPageRequest() else { return }
         
         task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             guard let self else { return }
@@ -109,7 +103,6 @@ class ImagesListService {
                 do {
                     let photoResults = try decoder.decode([PhotoResult].self, from: data)
                     for photoResult in photoResults {
-                        //guard let url = URL(string: photoResult.urls.regular) else { continue }
                         photos.append(photoResult.getPhoto())
                     }
                     
@@ -132,13 +125,51 @@ class ImagesListService {
         task?.resume()
     }
     
-    private func request() -> URLRequest? {
+    private func makeFetchPhotosNextPageRequest() -> URLRequest? {
         var urlComponents = URLComponents(string: Constants.defaultBaseURLString + "/photos")
         urlComponents?.queryItems = [URLQueryItem(name: "page", value: String(pageNumber))]
         
         guard let url = urlComponents?.url, let token = tokenStorage.token else { return nil }
         
         var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        return request
+    }
+    
+    func changeLike(photoId: String, isLike: Bool, _ completion: @escaping (Result<Void, Error>) -> Void) {
+        
+        assert(Thread.isMainThread)
+        
+        guard task == nil, let request = makeChangeLikeRequest(photoId: photoId, isLike: isLike) else { return }
+        
+        let task = URLSession.shared.data(for: request) { [weak self] result in
+            guard let self else { return }
+            
+            switch result {
+            case .success:
+                if let index = self.photos.firstIndex(where: { $0.id == photoId }) {
+                    self.photos[index].isLiked.toggle()
+                }
+                completion(.success(()))
+            case .failure(let error):
+                print("[ImagesListService]: Ошибка запроса: \(error.localizedDescription)")
+                completion(.failure(error))
+            }
+            self.task = nil
+        }
+        
+        self.task = task
+        task.resume()
+        
+    }
+    
+    private func makeChangeLikeRequest(photoId: String, isLike: Bool) -> URLRequest? {
+        guard let token = tokenStorage.token else { return nil }
+        let urlString = Constants.defaultBaseURLString + "/photos/\(photoId)/like"
+        guard let url = URL(string: urlString) else { return nil  }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = isLike ? HTTPMethod.post.rawValue : HTTPMethod.delete.rawValue
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         return request
     }

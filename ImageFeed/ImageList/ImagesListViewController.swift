@@ -74,6 +74,8 @@ extension ImagesListViewController: UITableViewDataSource {
         
         configCell(for: imageListCell, with: indexPath)
         
+        imageListCell.delegate = self
+        
         return imageListCell
     }
 }
@@ -91,10 +93,8 @@ extension ImagesListViewController {
             cell.dateLabel.text = ""
         }
         
-        /*let isLiked = indexPath.row % 2 == 0
-         let imageResource: ImageResource = isLiked ? .likeButtonOn : .likeButtonOff
-         let likeImage: UIImage = UIImage(resource: imageResource)
-         cell.likeButton.setImage(likeImage, for: .normal)*/
+        let likeImage = photo.isLiked ? UIImage(resource: .likeButtonOn) : UIImage(resource: .likeButtonOff)
+        cell.likeButton.setImage(likeImage, for: .normal)
     }
     
     private func loadImages() {
@@ -133,4 +133,36 @@ extension ImagesListViewController: UITableViewDelegate {
             loadImages()
         }
     }
+}
+
+extension ImagesListViewController: ImagesListCellDelegate {
+    
+    func imageListCellDidTapLike(_ cell: ImagesListCell) {
+        guard let indexPath = tableView.indexPath(for: cell) else { return }
+        let photo = photos[indexPath.row]
+        
+        UIBlockingProgressHUD.show()
+        
+        imagesListService.changeLike(photoId: photo.id, isLike: !photo.isLiked) { [weak self] result in
+            UIBlockingProgressHUD.dismiss()
+            guard let self else { return }
+            switch result {
+            case .success:
+                self.photos = self.imagesListService.photos
+                cell.setIsLiked(self.photos[indexPath.row].isLiked)
+                UIBlockingProgressHUD.dismiss()
+            case .failure:
+                UIBlockingProgressHUD.dismiss()
+                let alert = UIAlertController(
+                    title: "Что-то пошло не так(",
+                    message: "Не удалось поставить лайк",
+                    preferredStyle: .alert
+                )
+                alert.addAction(UIAlertAction(title: "OK", style: .default))
+                self.present(alert, animated: true)
+                return
+            }
+        }
+    }
+    
 }
