@@ -42,7 +42,22 @@ final class ImagesListViewController: UIViewController {
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        
+        if segue.identifier == showSingleImageSegueIdentifier {
+            guard
+                let viewController = segue.destination as? SingleImageViewController,
+                let indexPath = sender as? IndexPath
+            else {
+                assertionFailure("Failed to prepare for \(showSingleImageSegueIdentifier)")
+                return
+            }
+            
+            if let url = URL(string: photos[indexPath.row].largeImageURL) {
+                viewController.imageURL = url
+            }
+            
+        } else {
+            super.prepare(for: segue, sender: sender)
+        }
     }
     
     func updateTableViewAnimated() {
@@ -158,7 +173,7 @@ extension ImagesListViewController: ImagesListCellDelegate {
                     message: "Не удалось поставить лайк",
                     preferredStyle: .alert
                 )
-                alert.addAction(UIAlertAction(title: "OK", style: .default))
+                alert.addAction(UIAlertAction(title: "OК", style: .default))
                 self.present(alert, animated: true)
                 return
             }
