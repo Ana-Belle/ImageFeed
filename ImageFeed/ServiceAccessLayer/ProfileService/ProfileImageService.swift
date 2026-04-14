@@ -45,7 +45,7 @@ final class ProfileImageService {
         let task = URLSession.shared.objectTask(for: request) { [weak self] (result: Result<UserResult, Error>) in
             switch result {
             case .success(let result):
-                guard let self = self else { return }
+                guard let self else { return }
                 self.avatarURL = result.profileImage.small
                 completion(.success(result.profileImage.small))
                 
@@ -75,6 +75,10 @@ final class ProfileImageService {
         request.httpMethod = HTTPMethod.get.rawValue
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         return request
+    }
+    
+    func clean() {
+        avatarURL = nil
     }
 }
 

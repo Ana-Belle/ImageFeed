@@ -49,10 +49,9 @@ struct Photo {
 
 extension PhotoResult {
     
-    func getPhoto() -> Photo {
+    func getPhoto(dateFormatter: ISO8601DateFormatter) -> Photo {
         var date: Date?
         if let createdAt {
-            let dateFormatter = ISO8601DateFormatter()
             date = dateFormatter.date(from: createdAt)
         } else {
             date = nil
@@ -80,8 +79,19 @@ class ImagesListService {
     var photos: [Photo] = []
     static let didChangeNotification = Notification.Name(rawValue: "ImagesListServiceDidChange")
     
+    private lazy var dateFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        return formatter
+    }()
+    
     func fetchPhotosNextPage(completion: @escaping (Error?) -> Void) {
-        guard task == nil, let request = makeFetchPhotosNextPageRequest() else { return }
+        guard task == nil else { return }
+        
+        guard let request = makeFetchPhotosNextPageRequest()
+        else {
+            print("[fetchPhotosNextPage(ImagesListService)]: Ошибка создания запроса")
+            return
+        }
         
         task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             guard let self else { return }
@@ -103,7 +113,7 @@ class ImagesListService {
                 do {
                     let photoResults = try decoder.decode([PhotoResult].self, from: data)
                     for photoResult in photoResults {
-                        photos.append(photoResult.getPhoto())
+                        photos.append(photoResult.getPhoto(dateFormatter: dateFormatter))
                     }
                     
                     NotificationCenter.default.post(
@@ -120,6 +130,7 @@ class ImagesListService {
                 }
             } else {
                 complentionOnMainQueue(ImagesListServiceError.corruptedData)
+                print("[fetchPhotosNextPage(ImagesListService)]: Ошибка запроса")
             }
         }
         task?.resume()
@@ -152,7 +163,7 @@ class ImagesListService {
                 }
                 completion(.success(()))
             case .failure(let error):
-                print("[ImagesListService]: Ошибка запроса: \(error.localizedDescription)")
+                print("[changeLike(ImagesListService)]: Ошибка запроса: \(error.localizedDescription)")
                 completion(.failure(error))
             }
             self.task = nil
@@ -172,5 +183,9 @@ class ImagesListService {
         request.httpMethod = isLike ? HTTPMethod.post.rawValue : HTTPMethod.delete.rawValue
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         return request
+    }
+    
+    func clean() {
+        photos = []
     }
 }
