@@ -10,65 +10,6 @@ enum ImagesListServiceError: Error {
     case corruptedData
 }
 
-struct PhotoResult: Decodable {
-    let id: String
-    let createdAt: String?
-    let width: CGFloat
-    let height: CGFloat
-    let likedByUser: Bool
-    let description: String?
-    let urls: PhotoResultUrls
-    
-    enum CodingKeys: String, CodingKey {
-        case id
-        case createdAt = "created_at"
-        case width
-        case height
-        case likedByUser = "liked_by_user"
-        case description
-        case urls
-    }
-}
-
-struct PhotoResultUrls: Decodable {
-    let thumb: String
-    let small: String
-    let regular: String
-    let full: String
-}
-
-struct Photo {
-    let id: String
-    let size: CGSize
-    let createdAt: Date?
-    let welcomeDescription: String?
-    let thumbImageURL: String
-    let largeImageURL: String
-    var isLiked: Bool
-}
-
-extension PhotoResult {
-    
-    func getPhoto(dateFormatter: ISO8601DateFormatter) -> Photo {
-        var date: Date?
-        if let createdAt {
-            date = dateFormatter.date(from: createdAt)
-        } else {
-            date = nil
-        }
-        
-        return Photo(
-            id: id,
-            size: CGSize(width: width, height: height),
-            createdAt: date,
-            welcomeDescription: description,
-            thumbImageURL: urls.thumb,
-            largeImageURL: urls.full,
-            isLiked: likedByUser
-        )
-    }
-}
-
 class ImagesListService {
     private let tokenStorage = OAuth2TokenStorage.shared
     private let decoder = JSONDecoder()
@@ -96,7 +37,7 @@ class ImagesListService {
         task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             guard let self else { return }
             
-            let complentionOnMainQueue: (Error?) -> Void = { error in
+            let completionOnMainQueue: (Error?) -> Void = { error in
                 DispatchQueue.main.async {
                     completion(error)
                 }
@@ -104,32 +45,33 @@ class ImagesListService {
             
             task = nil
             if let error {
-                DispatchQueue.main.async {
-                    complentionOnMainQueue(error)
-                }
+                completionOnMainQueue(error)
+                return
             }
             
             if let data {
                 do {
                     let photoResults = try decoder.decode([PhotoResult].self, from: data)
-                    for photoResult in photoResults {
-                        photos.append(photoResult.getPhoto(dateFormatter: dateFormatter))
-                    }
+                    let newPhotos = photoResults.map { $0.getPhoto(dateFormatter: self.dateFormatter) }
                     
-                    NotificationCenter.default.post(
-                        name: ImagesListService.didChangeNotification,
-                        object: self,
-                        userInfo: ["photos": self.photos]
-                    )
+                    DispatchQueue.main.async {
+                        self.photos.append(contentsOf: newPhotos)
+                        
+                        NotificationCenter.default.post(
+                            name: ImagesListService.didChangeNotification,
+                            object: self,
+                            userInfo: ["photos": self.photos]
+                        )
+                    }
                     
                     pageNumber += 1
                     
-                    complentionOnMainQueue(nil)
+                    completionOnMainQueue(nil)
                 } catch {
-                    complentionOnMainQueue(error)
+                    completionOnMainQueue(error)
                 }
             } else {
-                complentionOnMainQueue(ImagesListServiceError.corruptedData)
+                completionOnMainQueue(ImagesListServiceError.corruptedData)
                 print("[fetchPhotosNextPage(ImagesListService)]: Ошибка запроса")
             }
         }
