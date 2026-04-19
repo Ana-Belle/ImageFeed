@@ -127,6 +127,7 @@ final class ProfileViewController: UIViewController {
         exitButton.tintColor = .ypRedIOS
         exitButton.translatesAutoresizingMaskIntoConstraints = false
         exitButton.addTarget(self, action: #selector(didTapExitButton), for: .touchUpInside)
+        exitButton.accessibilityIdentifier = "exit button"
         view.addSubview(exitButton)
         
         guard let avatarImageView else { return }

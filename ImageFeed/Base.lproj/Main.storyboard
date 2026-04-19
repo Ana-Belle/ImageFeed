@@ -135,6 +135,7 @@
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Mb8-jn-CW5">
                                 <rect key="frame" x="16" y="680" width="361" height="48"/>
                                 <color key="backgroundColor" name="YP White (iOS)"/>
+                                <accessibility key="accessibilityConfiguration" identifier="Authenticate"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="48" id="ehq-0X-POk"/>
                                 </constraints>
@@ -195,6 +196,7 @@
                             </scrollView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="50O-AC-BPf" userLabel="Back Button">
                                 <rect key="frame" x="8" y="68" width="24" height="24"/>
+                                <accessibility key="accessibilityConfiguration" identifier="nav back button"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="24" id="BcQ-Ai-uav"/>
                                     <constraint firstAttribute="width" constant="24" id="JZK-4M-wDk"/>
@@ -239,7 +241,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="nWc-5S-VnT" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="169" y="594"/>
+            <point key="canvasLocation" x="168.70229007633588" y="593.66197183098598"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="asp-bP-70v">
