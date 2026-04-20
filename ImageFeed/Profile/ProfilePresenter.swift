@@ -4,73 +4,46 @@
 //
 //  Created by Anastasia Belyakova on 19.04.2026.
 //
+import Foundation
 
-import UIKit
-import Kingfisher
-
-// MARK: - Presenter Protocol
-protocol ProfileViewPresenterDelegate: AnyObject {
-    func presentProfile(_ profile: Profile)
-    func presentAvatar(url: URL)
-    func presentLogoutAlert(confirmHandler: @escaping () -> Void)
+protocol ProfilePresenterProtocol {
+    var view: ProfileViewControllerProtocol? { get set }
+    func viewDidLoad()
+    func logout()
 }
 
-// MARK: - Presenter
-final class ProfileViewPresenter {
-    weak var delegate: ProfileViewPresenterDelegate?
-    
-    private let profileService: ProfileServiceProtocol
-    private let profileImageService: ProfileImageServiceProtocol
-    private let logoutService: ProfileLogoutServiceProtocol
-    
+final class ProfilePresenter: ProfilePresenterProtocol {
+    weak var view: ProfileViewControllerProtocol?
     private var profileImageServiceObserver: NSObjectProtocol?
     
-    init(
-        profileService: ProfileServiceProtocol,
-        profileImageService: ProfileImageServiceProtocol,
-        logoutService: ProfileLogoutServiceProtocol
-    ) {
-        self.profileService = profileService
-        self.profileImageService = profileImageService
-        self.logoutService = logoutService
-    }
-    
-    // MARK: - Public Methods
-    func loadProfile() {
-        guard let profile = profileService.profile else { return }
-        delegate?.presentProfile(profile)
-    }
-    
-    func loadAvatar() {
-        guard let profileImageURL = profileImageService.avatarURL,
-              let imageUrl = URL(string: profileImageURL) else { return }
-        delegate?.presentAvatar(url: imageUrl)
-    }
-    
-    func setupProfileImageObserver() {
+    func viewDidLoad() {
+        if let profile = ProfileService.shared.profile {
+            view?.updateProfileDetails(profile: profile)
+        }
+        
         profileImageServiceObserver = NotificationCenter.default
             .addObserver(
                 forName: ProfileImageService.didChangeNotification,
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
-                self?.loadAvatar()
+                guard let self = self else { return }
+                self.updateAvatar()
             }
+        
+        updateAvatar()
     }
     
-    func showLogoutConfirmation() {
-        delegate?.presentLogoutAlert { [weak self] in
-            self?.logout()
-        }
+    private func updateAvatar() {
+        guard
+            let profileImageURL = ProfileImageService.shared.avatarURL,
+            let url = URL(string: profileImageURL)
+        else { return }
+        
+        view?.updateAvatar(imageUrl: url)
     }
     
     func logout() {
-        logoutService.logout()
-    }
-    
-    deinit {
-        if let observer = profileImageServiceObserver {
-            NotificationCenter.default.removeObserver(observer)
-        }
+        ProfileLogoutService.shared.logout()
     }
 }

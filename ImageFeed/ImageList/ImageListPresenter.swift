@@ -1,113 +1,102 @@
 //
-//  ImageListPresenter.swift
+//  ImagesListPresenter.swift
 //  ImageFeed
 //
 //  Created by Anastasia Belyakova on 19.04.2026.
 //
 
-import UIKit
+import Foundation
 
-// MARK: - Presenter Protocol
-protocol ImagesListPresenterDelegate: AnyObject {
-    func didLoadImages()
-    func didUpdateImages(with newIndexPaths: [IndexPath])
-    func didUpdateLikeStatus(at indexPath: IndexPath, isLiked: Bool)
-    func didFailWithError(_ error: String)
-    func presentSingleImage(url: URL)
+protocol ImagesListPresenterProtocol {
+    var view: ImagesListViewControllerProtocol? { get set }
+    func viewDidLoad()
+    func loadImages() -> Bool
+    func changeLike(photoId: String, isLike: Bool, _ completion: @escaping (Result<Void, Error>) -> Void)
+    func photosCount() -> Int
+    func photo(at index: Int) -> Photo
+    func configCell(for index: Int) -> (url: URL?, dateText: String, isLiked: Bool)
 }
 
-// MARK: - Presenter
-final class ImagesListPresenter {
-    weak var delegate: ImagesListPresenterDelegate?
-    
-    private let imagesListService: ImagesListServiceProtocol
+final class ImagesListPresenter: ImagesListPresenterProtocol {
+    weak var view: ImagesListViewControllerProtocol?
+    var photos: [Photo] = []
+    private var imagesListService = ImagesListService()
     private var imagesListServiceObserver: NSObjectProtocol?
     
-    var photos: [Photo] {
-        imagesListService.photos
+    private lazy var dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
+        formatter.timeStyle = .none
+        return formatter
+    }()
+    
+    func viewDidLoad() {
+        imagesListServiceObserver = NotificationCenter.default
+            .addObserver(
+                forName: ImagesListService.didChangeNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                guard let self = self else { return }
+                self.updateTableView()
+            }
+        
+        loadImages()
     }
     
-    init(imagesListService: ImagesListServiceProtocol) {
-        self.imagesListService = imagesListService
-    }
-    
-    // MARK: - Public Methods
-    func setupServiceObserver() {
-        imagesListServiceObserver = NotificationCenter.default.addObserver(
-            forName: ImagesListService.didChangeNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            self?.handleImagesListDidChange()
-        }
-    }
-    
-    func loadNextPage() {
+    func loadImages() -> Bool {
+        var result: Bool = true
         imagesListService.fetchPhotosNextPage { [weak self] error in
-            if let error = error {
-                self?.delegate?.didFailWithError("Error fetching images: \(error)")
-            } else {
-                self?.delegate?.didLoadImages()
+            guard let self else { return }
+            
+            if let error {
+                result = false
             }
         }
+        return result
     }
     
-    func toggleLike(for indexPath: IndexPath, completion: @escaping (Result<Void, Error>) -> Void) {
-        let photo = photos[indexPath.row]
+    func photosCount() -> Int {
+        return photos.count
+    }
+    
+    func photo(at index: Int) -> Photo {
+        return photos[index]
+    }
+    
+    func configCell(for index: Int) -> (url: URL?, dateText: String, isLiked: Bool) {
+        let photo = photos[index]
+        let url = URL(string: photo.thumbImageURL)
         
-        imagesListService.changeLike(photoId: photo.id, isLike: !photo.isLiked) { [weak self] result in
+        let dateText: String
+        if let createdAt = photo.createdAt {
+            dateText = dateFormatter.string(from: createdAt)
+        } else {
+            dateText = ""
+        }
+        
+        return (url, dateText, photo.isLiked)
+    }
+    
+    func changeLike(photoId: String, isLike: Bool, _ completion: @escaping (Result<Void, Error>) -> Void) {
+        imagesListService.changeLike(photoId: photoId, isLike: isLike) { [weak self] result in
+            guard let self = self else { return }
             switch result {
             case .success:
-                guard let self = self else { return }
-                let updatedPhoto = self.photos[indexPath.row]
-                self.delegate?.didUpdateLikeStatus(at: indexPath, isLiked: updatedPhoto.isLiked)
+                self.photos = self.imagesListService.photos
                 completion(.success(()))
-                
             case .failure(let error):
-                self?.delegate?.didFailWithError("Не удалось поставить лайк")
                 completion(.failure(error))
             }
         }
     }
     
-    func getImageURL(for indexPath: IndexPath) -> URL? {
-        let photo = photos[indexPath.row]
-        return URL(string: photo.largeImageURL)
-    }
-    
-    func getThumbImageURL(for indexPath: IndexPath) -> URL? {
-        let photo = photos[indexPath.row]
-        return URL(string: photo.thumbImageURL)
-    }
-    
-    func getPhotoSize(for indexPath: IndexPath) -> CGSize {
-        photos[indexPath.row].size
-    }
-    
-    func shouldLoadNextPage(for indexPath: IndexPath) -> Bool {
-        indexPath.row == photos.count - 1
-    }
-    
-    func getPhoto(at indexPath: IndexPath) -> Photo {
-        photos[indexPath.row]
-    }
-    
-    // MARK: - Private Methods
-    private func handleImagesListDidChange() {
+    private func updateTableView() {
         let oldCount = photos.count
         let newCount = imagesListService.photos.count
-        
+        photos = imagesListService.photos
         if oldCount != newCount {
-            let indexPaths = (oldCount..<newCount).map { i in
-                IndexPath(row: i, section: 0)
-            }
-            delegate?.didUpdateImages(with: indexPaths)
-        }
-    }
-    
-    deinit {
-        if let observer = imagesListServiceObserver {
-            NotificationCenter.default.removeObserver(observer)
+            view?.updateTableViewAnimated(oldCount: oldCount, newCount: newCount)
         }
     }
 }
