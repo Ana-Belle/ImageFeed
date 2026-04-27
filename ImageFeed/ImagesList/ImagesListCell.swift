@@ -30,7 +30,7 @@ final class ImagesListCell: UITableViewCell {
     func setIsLiked(_ isLiked: Bool) {
         let image = isLiked ? UIImage(resource: .likeButtonOn) : UIImage(resource: .likeButtonOff)
         likeButton.setImage(image, for: .normal)
-        likeButton.accessibilityIdentifier = isLiked ? "like button on" : "like button off"
+        likeButton.accessibilityIdentifier = isLiked ? AccessibilityIdentifiers.likeButtonOn : AccessibilityIdentifiers.likeButtonOff
     }
     
     @IBAction func likeButtonClicked(_ sender: Any) {

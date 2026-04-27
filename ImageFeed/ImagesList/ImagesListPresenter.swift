@@ -12,7 +12,7 @@ protocol ImagesListPresenterProtocol {
     func viewDidLoad()
     func loadImages() -> Bool
     func changeLike(photoId: String, isLike: Bool, _ completion: @escaping (Result<Void, Error>) -> Void)
-    func photosCount() -> Int
+    var photosCount: Int { get }
     func photo(at index: Int) -> Photo
     func configCell(for index: Int) -> (url: URL?, dateText: String, isLiked: Bool)
 }
@@ -37,31 +37,29 @@ final class ImagesListPresenter: ImagesListPresenterProtocol {
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
-                guard let self = self else { return }
+                guard let self else { return }
                 self.updateTableView()
             }
         
-        loadImages()
+        _ = loadImages()
     }
     
     func loadImages() -> Bool {
         var result: Bool = true
-        imagesListService.fetchPhotosNextPage { [weak self] error in
-            guard let self else { return }
-            
-            if let error {
+        imagesListService.fetchPhotosNextPage { error in
+            if error != nil {
                 result = false
             }
         }
         return result
     }
     
-    func photosCount() -> Int {
-        return photos.count
+    var photosCount: Int {
+        photos.count
     }
     
     func photo(at index: Int) -> Photo {
-        return photos[index]
+        photos[index]
     }
     
     func configCell(for index: Int) -> (url: URL?, dateText: String, isLiked: Bool) {
@@ -80,7 +78,7 @@ final class ImagesListPresenter: ImagesListPresenterProtocol {
     
     func changeLike(photoId: String, isLike: Bool, _ completion: @escaping (Result<Void, Error>) -> Void) {
         imagesListService.changeLike(photoId: photoId, isLike: isLike) { [weak self] result in
-            guard let self = self else { return }
+            guard let self else { return }
             switch result {
             case .success:
                 self.photos = self.imagesListService.photos

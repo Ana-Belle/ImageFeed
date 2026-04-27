@@ -14,27 +14,27 @@ final class ImagesListPresenterSpy: ImagesListPresenterProtocol {
     var viewDidLoadCalled: Bool = false
     var loadImagesCalled: Bool = false
     var photosCountResult: Int = 0
-    
+
     func viewDidLoad() {
         viewDidLoadCalled = true
     }
-    
+
     func loadImages() -> Bool {
         loadImagesCalled = true
         return true
     }
-    
+
     func changeLike(photoId: String, isLike: Bool, _ completion: @escaping (Result<Void, Error>) -> Void) { }
-    
-    func photosCount() -> Int {
-        return photosCountResult
+
+    var photosCount: Int {
+        photosCountResult
     }
-    
+
     func photo(at index: Int) -> ImageFeed.Photo {
-        fatalError("")
+        Photo(id: "", size: .zero, createdAt: nil, welcomeDescription: nil, thumbImageURL: "", largeImageURL: "", isLiked: false)
     }
-    
+
     func configCell(for index: Int) -> (url: URL?, dateText: String, isLiked: Bool) {
-        fatalError("")
+        (nil, "", false)
     }
 }

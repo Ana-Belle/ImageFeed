@@ -66,7 +66,7 @@ final class ImagesListViewController: UIViewController, ImagesListViewController
 
 extension ImagesListViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        presenter?.photosCount() ?? 0
+        presenter?.photosCount ?? 0
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -127,8 +127,8 @@ extension ImagesListViewController: UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        var imageCount = presenter?.photosCount() ?? 0
-        
+        let imageCount = presenter?.photosCount ?? 0
+
         if indexPath.row == imageCount - 1 {
             loadImages()
         }
